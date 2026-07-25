@@ -1,5 +1,5 @@
-#ifndef _REFLECT_BASE
-#define _REFLECT_BASE
+#ifndef _REFLECT_INJECT
+#define _REFLECT_INJECT
 
 #include <tplmp/access.h>
 #include <ppmp/loop.h>
@@ -8,7 +8,7 @@ namespace reflect
 {
 enum reflect_type
 {
-	type_class, type_field, type_function
+	type_primitive, type_class, type_field, type_function
 };
 
 /**
@@ -85,4 +85,4 @@ enum reflect_type
 	}
 }
 
-#endif//_REFLECT_BASE
+#endif//_REFLECT_INJECT

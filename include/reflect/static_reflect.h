@@ -1,9 +1,11 @@
 #ifndef _REFLECT_STATICREFLECT
 #define _REFLECT_STATICREFLECT
 
-#include <ppmp/list_op.h>
+#include <ppmp/base.h>
+#include <ppmp/list_op_step.h>
+#include <ppmp/loop.h>
 
-#include "base.h"
+#include "inject.h"
 
 /**
  * 静态反射
@@ -21,7 +23,7 @@ struct not_reflected;
  * 因此实际调用时编译器将最终决议调用为__reflect::__type_info_adl()而非本模板函数，从而将实际储存静态反射信息的type_info_t<_T>类名提取出来。
  */
 template<typename _T>
-not_reflected<_T> __type_info_adl(tplmp::type_t<_T>);
+inline not_reflected<_T> __type_info_adl(tplmp::type_t<_T>) noexcept;
 
 template<typename _T>
 using type_info = decltype(__type_info_adl(tplmp::type_t<_T>()));
@@ -65,9 +67,9 @@ using type_info = decltype(__type_info_adl(tplmp::type_t<_T>()));
  *  __refl_field__(__entity__(y), int)
  *  __refl_function__(operator_add, __entity__(operator+), float(int))
  * )
- * 访问x的成员指针的写法为ns::reflect::type_info<ns::A>::field::x::pmemb；
- * 访问func的成员指针的写法为ns::reflect::type_info<ns::A>::function::func::pmemb；
- * 访问operator+的成员指针的写法为ns::reflect::type_info<ns::A>::function::operator_add::pmemb。
+ * 访问x的成员指针的写法为reflect::type_info<ns::A>::field::x::pmemb；
+ * 访问func的成员指针的写法为reflect::type_info<ns::A>::function::func::pmemb；
+ * 访问operator+的成员指针的写法为reflect::type_info<ns::A>::function::operator_add::pmemb。
  */
 #define __static_reflect_def__(class_info, ...)\
 	__call_exp__(__reflect_static_def_memb_call_def_class_expand_id__())(__static_reflect_def_intl__, __unpack__(class_info), __VA_ARGS__)
@@ -96,7 +98,7 @@ using type_info = decltype(__type_info_adl(tplmp::type_t<_T>()));
 		};\
 		typedef __reflect_static_membs_list__(type_function, __VA_ARGS__) functions;\
 	};\
-	type_info_t<__entity_val__(class_name)> __type_info_adl(::tplmp::type_t<__entity_val__(class_name)>);\
+	inline type_info_t<__entity_val__(class_name)> __type_info_adl(::tplmp::type_t<__entity_val__(class_name)>) noexcept;\
 	}\
 	using __reflect::__type_info_adl;
 
@@ -168,6 +170,13 @@ using type_info = decltype(__type_info_adl(tplmp::type_t<_T>()));
 
 #define __reflect_static_membs_list__(target_refl_type, ...)\
 	::tplmp::type_pack<__reflect_static_membs_list_tpl_params__(target_refl_type, __VA_ARGS__)>
+
+/**
+ * @brief 只定义静态反射
+ */
+#define __static_reflect__(class_info, ...)\
+	__reflect_decl_pmemb__(class_info, __VA_ARGS__)\
+	__static_reflect_def__(class_info, __VA_ARGS__)
 }
 
 #endif//_REFLECT_STATICREFLECT
