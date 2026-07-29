@@ -8,6 +8,8 @@
 #include <ppmp/list_op_step.h>
 #include <ppmp/loop.h>
 
+#include <tplmp/stl_util.h>
+
 #include "inject.h"
 
 /**
@@ -232,26 +234,7 @@ inline const type_info_rt_t* type_info_rt_t::base(size_t idx) const noexcept
 	return bases->at(idx);
 }
 
-struct __str_djb2_hash
-{
-	size_t operator()(const char* s) const noexcept
-	{
-		size_t hash = 5381;
-		while(unsigned char c = (unsigned char)(*s++))
-			hash = ((hash << 5) + hash) + c;
-		return hash;
-	}
-};
-
-struct __str_equal
-{
-	bool operator()(const char* str1, const char* str2) const noexcept
-	{
-		return !strcmp(str1, str2);
-	}
-};
-
-typedef std::unordered_map<const char*, type_info_rt_t*, __str_djb2_hash, __str_equal> type_info_map;
+typedef std::unordered_map<const char*, type_info_rt_t*, tplmp::cstr_djb2_hash_op, tplmp::cstr_equal_op> type_info_map;
 
 inline type_info_map& __type_info_map() noexcept
 {
@@ -282,6 +265,8 @@ inline type_info_rt_t* type_info_rt() noexcept
 // 定义基本类型
 #define __static_reflect_def_primitive_intl__(i, begin_idx, end_idx, const_params, type)\
 	template<typename _T>\
+	inline ::reflect::type_info_rt_t* type_info_rt() noexcept;\
+	template<typename _T>\
 	struct __type_info_rt_t;\
 	template<>\
 	struct __type_info_rt_t<type>\
@@ -292,6 +277,8 @@ inline type_info_rt_t* type_info_rt() noexcept
 		const ::reflect::base_info_rt_list* bases = nullptr;\
 		const ::reflect::memb_info_rt_list* fields= nullptr;\
 		const ::reflect::memb_info_rt_list* functions = nullptr;\
+	private:\
+		friend ::reflect::type_info_rt_t* type_info_rt<type>() noexcept;\
 		__type_info_rt_t()\
 		{\
 			::reflect::__type_info_map()[__str__(type)] = (::reflect::type_info_rt_t*)this;\
