@@ -1,8 +1,9 @@
 #ifndef _REFLECT_INJECT
 #define _REFLECT_INJECT
 
-#include <tplmp/access.h>
 #include <ppmp/loop.h>
+
+#include <tplmp/access.h>
 
 namespace reflect
 {
@@ -65,23 +66,24 @@ enum reflect_type
 
 // ----- 定义取成员指针的友元注入相关类 -----
 
-#if !defined(__reflect_decl_pmemb_loop_expand_id__)
-#define __reflect_decl_pmemb_loop_expand_id__() 1
-#endif
-#if !defined(__reflect_decl_pmemb_call_expand_id__)
-#define __reflect_decl_pmemb_call_expand_id__() 1
+#if !defined(__decl_reflect_loop_expand_id__)
+#define __decl_reflect_loop_expand_id__() 1
 #endif
 
-#define __reflect_decl_pmemb_op__(i, begin_idx, end_idx, class_info, memb_info)\
-	__call_exp__(__reflect_decl_pmemb_call_expand_id__())(__reflect_decl_pmemb_op_intl__, i, begin_idx, end_idx, __unpack__(class_info), __unpack__(memb_info))
-#define __reflect_decl_pmemb_op_intl__(i, begin_idx, end_idx, refl_type_class, refl_class_name, class_name, class_base_list, refl_type_memb, refl_memb_name, memb_name, memb_decl_type)\
+#define __decl_reflect_op__(i, begin_idx, end_idx, class_info, memb_info)\
+	__decl_reflect_op_exp__(__unpack__(class_info), __unpack__(memb_info))
+
+#define __decl_reflect_op_exp__(...)\
+	__decl_reflect_op_intl__(__VA_ARGS__)
+
+#define __decl_reflect_op_intl__(refl_type_class, refl_class_name, class_name, class_base_list, refl_type_memb, refl_memb_name, memb_name, memb_decl_type)\
 	__decl_pmemb__(__reflect_pmemb_id__(refl_class_name, refl_memb_name), class_name, memb_name, memb_decl_type)\
 	__decl_memb_ptr__(__reflect_pmemb_id__(refl_class_name, refl_memb_name), memb_decl_type)
 
-#define __reflect_decl_pmemb__(class_info, ...)\
+#define __decl_reflect__(class_info, ...)\
 	namespace __reflect\
 	{\
-	__for_each__(__reflect_decl_pmemb_loop_expand_id__())(__reflect_decl_pmemb_op__, class_info, __VA_ARGS__)\
+		__for_each__(__decl_reflect_loop_expand_id__())(__decl_reflect_op__, class_info, __VA_ARGS__)\
 	}
 }
 

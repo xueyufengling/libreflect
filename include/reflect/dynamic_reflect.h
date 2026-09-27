@@ -4,7 +4,6 @@
 #include <string.h>
 #include <unordered_map>
 
-#include <ppmp/base.h>
 #include <ppmp/list_op_step.h>
 #include <ppmp/loop.h>
 
@@ -263,7 +262,7 @@ inline type_info_rt_t* type_info_rt() noexcept
 }
 
 // 定义基本类型
-#define __static_reflect_def_primitive_intl__(i, begin_idx, end_idx, const_params, type)\
+#define __def_dynamic_reflect_def_primitive_intl__(i, begin_idx, end_idx, const_params, type)\
 	template<typename _T>\
 	inline ::reflect::type_info_rt_t* type_info_rt() noexcept;\
 	template<typename _T>\
@@ -292,32 +291,23 @@ inline type_info_rt_t* type_info_rt() noexcept
 		return (::reflect::type_info_rt_t*)&__type_info_rt_t<type>::instance;\
 	}
 
-#define __static_reflect_def_primitive__(...)\
-	__for_each__(0)(__static_reflect_def_primitive_intl__, , __VA_ARGS__)
+#define __def_dynamic_reflect_def_primitive__(...)\
+	__for_each__(0)(__def_dynamic_reflect_def_primitive_intl__, , __VA_ARGS__)
 
 #if __cplusplus < 202002L
-__static_reflect_def_primitive__(bool, char, char16_t, char32_t, wchar_t, short,
+__def_dynamic_reflect_def_primitive__(bool, char, char16_t, char32_t, wchar_t, short,
 		int, long, long long, float, double, long double, unsigned char, unsigned short,
 		unsigned int, unsigned long, unsigned long long, void)
 #else
-__static_reflect_def_primitive__(bool, char, char8_t, char16_t, char32_t, wchar_t, short,
+__def_dynamic_reflect_def_primitive__(bool, char, char8_t, char16_t, char32_t, wchar_t, short,
 		int, long, long long, float, double, long double, unsigned char, unsigned short,
 		unsigned int, unsigned long, unsigned long long, void)
 #endif
 
-#undef __static_reflect_def_primitive__
-#undef __static_reflect_def_primitive_intl__
+#undef __def_dynamic_reflect_def_primitive__
+#undef __def_dynamic_reflect_def_primitive_intl__
 
 // ----- 动态反射类定义 -----
-#if !defined(__reflect_dynamic_def_memb_loop_expand_id__)
-#define __reflect_dynamic_def_memb_loop_expand_id__() 2
-#endif
-#if !defined(__reflect_dynamic_def_memb_call_def_class_expand_id__)
-#define __reflect_dynamic_def_memb_call_def_class_expand_id__() 2
-#endif
-#if !defined(__reflect_dynamic_def_memb_call_def_memb_expand_id__)
-#define __reflect_dynamic_def_memb_call_def_memb_expand_id__() 3
-#endif
 
 /**
  * @brief 定义编译时动态反射，无视访问权限获取成员指针。
@@ -352,10 +342,13 @@ __static_reflect_def_primitive__(bool, char, char8_t, char16_t, char32_t, wchar_
  * 访问func的成员信息的写法为type_info_rt->function_by_name("func")；
  * 访问operator+的成员信息的写法为type_info_rt->function_by_name("operator+")或type_info_rt->function_by_refl_name("operator_add")；
  */
-#define __dynamic_reflect_def__(class_info, ...)\
-	__call_exp__(__reflect_dynamic_def_memb_call_def_class_expand_id__())(__dynamic_reflect_def_intl__, __unpack__(class_info), __VA_ARGS__)
+#define __def_dynamic_reflect__(class_info, ...)\
+	__def_dynamic_reflect_exp__(__unpack__(class_info), __VA_ARGS__)
 
-#define __dynamic_reflect_def_intl__(refl_type_class, refl_class_name, class_name, class_base_list, ...)\
+#define __def_dynamic_reflect_exp__(...)\
+	__def_dynamic_reflect_intl__(__VA_ARGS__)
+
+#define __def_dynamic_reflect_intl__(refl_type_class, refl_class_name, class_name, class_base_list, ...)\
 	namespace __reflect\
 	{\
 	inline ::reflect::type_info_rt_t* __type_info_rt_adl(::tplmp::type_t<__entity_val__(class_name)>) noexcept;\
@@ -373,19 +366,19 @@ __static_reflect_def_primitive__(bool, char, char8_t, char16_t, char32_t, wchar_
 		const struct\
 		{\
 			const size_t size = __sizeof__(__unpack__(class_base_list));\
-			__reflect_dynamic_bases_list__(class_base_list)\
+			__def_dynamic_reflect_bases_list__(class_base_list)\
 		} __bases_list;\
 		const struct\
 		{\
-			const size_t size = __reflect_dynamic_def_membs_size__(type_field, __VA_ARGS__);\
+			const size_t size = __def_dynamic_reflect_membs_size__(type_field, __VA_ARGS__);\
 			const size_t memb_info_size = sizeof(::reflect::memb_info_rt) + sizeof(int __entity_val__(class_name)::*);\
-			__reflect_dynamic_def_membs__(type_field, refl_class_name, class_name, __VA_ARGS__)\
+			__def_dynamic_reflect_def_membs__(type_field, refl_class_name, class_name, __VA_ARGS__)\
 		} __fields_list;\
 		const struct\
 		{\
-			const size_t size = __reflect_dynamic_def_membs_size__(type_function, __VA_ARGS__);\
+			const size_t size = __def_dynamic_reflect_membs_size__(type_function, __VA_ARGS__);\
 			const size_t memb_info_size = sizeof(::reflect::memb_info_rt) + sizeof(void(__entity_val__(class_name)::*)());\
-			__reflect_dynamic_def_membs__(type_function, refl_class_name, class_name, __VA_ARGS__)\
+			__def_dynamic_reflect_def_membs__(type_function, refl_class_name, class_name, __VA_ARGS__)\
 		} __functions_list;\
 	private:\
 		friend inline ::reflect::type_info_rt_t* __type_info_rt_adl(::tplmp::type_t<__entity_val__(class_name)>) noexcept;\
@@ -408,25 +401,28 @@ __static_reflect_def_primitive__(bool, char, char8_t, char16_t, char32_t, wchar_
 
 // ----- 定义基类列表 -----
 
-#if !defined(__reflect_dynamic_bases_list_loop_expand_id__)
-#define __reflect_dynamic_bases_list_loop_expand_id__() 3
+#if !defined(__def_dynamic_reflect_bases_list_loop_expand_id__)
+#define __def_dynamic_reflect_bases_list_loop_expand_id__() 1
 #endif
 
-#define __reflect_dynamic_bases_list_def_elements_op__(i, begin_idx, end_idx, const_params, base_class_name)\
+#define __def_dynamic_reflect_bases_list_def_elements_op__(i, begin_idx, end_idx, const_params, base_class_name)\
 	const ::reflect::type_info_rt_t* _##i = ::reflect::type_info_rt<__entity_val__(base_class_name)>();
 
-#define __reflect_dynamic_bases_list__(class_base_list)\
-	__for_each__(__reflect_dynamic_bases_list_loop_expand_id__())(__reflect_dynamic_bases_list_def_elements_op__, , __unpack__(class_base_list))
+#define __def_dynamic_reflect_bases_list__(class_base_list)\
+	__for_each__(__def_dynamic_reflect_bases_list_loop_expand_id__())(__def_dynamic_reflect_bases_list_def_elements_op__, , __unpack__(class_base_list))
 
 // ----- 成员定义 -----
 
-#define __reflect_dynamic_def_memb_op__(i, begin_idx, end_idx, target_refl_type, refl_class_name, class_name, memb_info)\
-	__call_exp__(__reflect_dynamic_def_memb_call_def_memb_expand_id__())(__reflect_dynamic_def_memb_op_intl__, target_refl_type, refl_class_name, class_name, __unpack__(memb_info))
+#define __def_dynamic_reflect_def_memb_op__(i, begin_idx, end_idx, target_refl_type, refl_class_name, class_name, memb_info)\
+	__def_dynamic_reflect_def_memb_op_exp__(target_refl_type, refl_class_name, class_name, __unpack__(memb_info))
+
+#define __def_dynamic_reflect_def_memb_op_exp__(target_refl_type, refl_class_name, class_name, ...)\
+	__def_dynamic_reflect_def_memb_op_intl__(target_refl_type, refl_class_name, class_name, __VA_ARGS__)
 
 /**
  * @brief 定义__memb_info_rt_t<>类型的成员作为字段，成员信息的实际储存位置
  */
-#define __reflect_dynamic_def_memb_op_intl__(target_refl_type, refl_class_name, class_name, refl_memb_type, refl_memb_name, memb_name, memb_decl_type)\
+#define __def_dynamic_reflect_def_memb_op_intl__(target_refl_type, refl_class_name, class_name, refl_memb_type, refl_memb_name, memb_name, memb_decl_type)\
 	__if_intl__(__equal__(refl_memb_type, target_refl_type))\
 	(\
 		const ::reflect::__memb_info_rt_t<typename ::tplmp::ptr_type<__entity_val__(class_name), __entity_val__(memb_decl_type)>::type, __memb_ptr<__reflect_pmemb_id__(refl_class_name, refl_memb_name)>()>\
@@ -443,30 +439,37 @@ __static_reflect_def_primitive__(bool, char, char8_t, char16_t, char32_t, wchar_
 		};\
 	)
 
-#define __reflect_dynamic_def_membs__(target_refl_type, refl_class_name, class_name, ...)\
-	__for_each__(__reflect_dynamic_def_memb_loop_expand_id__())(__reflect_dynamic_def_memb_op__, __pack_list__(target_refl_type, refl_class_name, class_name), __VA_ARGS__)
+#define __def_dynamic_reflect_def_membs__(target_refl_type, refl_class_name, class_name, ...)\
+	__for_each__(__def_dynamic_reflect_memb_loop_expand_id__())(__def_dynamic_reflect_def_memb_op__, __pack_list__(target_refl_type, refl_class_name, class_name), __VA_ARGS__)
 
 /**
  * @brief 匹配target_refl_type的成员的数量
  */
-#define __reflect_dynamic_def_memb_size_op__(i, begin_idx, end_idx, target_refl_type, memb_info)\
-	__call_exp__(__reflect_dynamic_def_memb_call_def_memb_expand_id__())(__reflect_dynamic_def_memb_size_op_intl__, target_refl_type, __unpack__(memb_info))
+#define __def_dynamic_reflect_memb_size_op__(i, begin_idx, end_idx, target_refl_type, memb_info)\
+	__def_dynamic_reflect_memb_size_op_exp__(target_refl_type, __unpack__(memb_info))
 
-#define __reflect_dynamic_def_memb_size_op_intl__(target_refl_type, refl_memb_type, refl_memb_name, memb_name, memb_decl_type)\
+#define __def_dynamic_reflect_memb_size_op_exp__(target_refl_type, ...)\
+	__def_dynamic_reflect_memb_size_op_intl__(target_refl_type, __VA_ARGS__)
+
+#define __def_dynamic_reflect_memb_size_op_intl__(target_refl_type, refl_memb_type, refl_memb_name, memb_name, memb_decl_type)\
 	__if_intl__(__equal__(refl_memb_type, target_refl_type))\
 	(\
 		__append_comma__(1)\
 	)
 
-#define __reflect_dynamic_def_membs_size__(target_refl_type, ...)\
-	__sizeof__(__strip_trailing_1_comma__(__for_each__(__reflect_dynamic_def_memb_loop_expand_id__())(__reflect_dynamic_def_memb_size_op__, target_refl_type, __VA_ARGS__)))
+#if !defined(__def_dynamic_reflect_memb_loop_expand_id__)
+#define __def_dynamic_reflect_memb_loop_expand_id__() 2
+#endif
+
+#define __def_dynamic_reflect_membs_size__(target_refl_type, ...)\
+	__sizeof__(__strip_trailing_1_comma__(__for_each__(__def_dynamic_reflect_memb_loop_expand_id__())(__def_dynamic_reflect_memb_size_op__, target_refl_type, __VA_ARGS__)))
 
 /**
  * @brief 只定义动态反射
  */
 #define __dynamic_reflect__(class_info, ...)\
-	__reflect_decl_pmemb__(class_info, __VA_ARGS__)\
-	__dynamic_reflect_def__(class_info, __VA_ARGS__)
+	__decl_reflect__(class_info, __VA_ARGS__)\
+	__def_dynamic_reflect__(class_info, __VA_ARGS__)
 }
 
 #endif//_REFLECT_DYNAMICREFLECT
